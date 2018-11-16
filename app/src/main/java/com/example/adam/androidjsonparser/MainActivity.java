@@ -22,49 +22,49 @@ import org.json.JSONException;
 
 public class MainActivity extends AppCompatActivity {
 
-    EditText getUser; // This will be a reference to our GitHub username input.
-    Button btnGetUsers;  // This is a reference to the "Get Repos" button.
+    EditText getUser; // This will be a reference to our ID input.
+    Button btnGetUsers;  // This is a reference to the "Get Data" button.
     TextView tvDataList;  // This will reference our data list text box.
     RequestQueue requestQueue;  // This is our requests queue to process our HTTP requests.
 
     String baseUrl = "http://192.168.1.16:8080/api/users/";  // This is the local PZH API URL for users - because it runs now on localhost, ip address has to be changes on different locations
-    String url; // This will hold the full URL which will include the user ID entered in the getUser.
+    String url; // This will hold the full URL which will include the user ID entered in the getUser. (if entered)
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);  // This is some magic for Android to load a previously saved state for when you are switching between actvities.
-        setContentView(R.layout.activity_main);  // This links our code to our layout which we defined earlier.
+        setContentView(R.layout.activity_main);  // This links our code to our layout
 
-        this.getUser = (EditText) findViewById(R.id.get_user);  // Link our github user text box.
+        this.getUser = (EditText) findViewById(R.id.get_user);  // Link our ID input text box.
         this.btnGetUsers = (Button) findViewById(R.id.btn_get_users);  // Link our clicky button.
         this.tvDataList = (TextView) findViewById(R.id.tv_repo_list);  // Link our data list text output box.
         this.tvDataList.setMovementMethod(new ScrollingMovementMethod());  // This makes our text box scrollable
 
         requestQueue = Volley.newRequestQueue(this);  // This setups up a new request queue which we will need to make HTTP requests.
     }
-    private void clearRepoList() {
-        // This will clear the repo list (set it as a blank string).
+    private void clearDataList() {
+        // This will clear the data list (set it as a blank string).
         this.tvDataList.setText("");
     }
 
-    private void addToRepoList(String repoName, String lastUpdated) {
-        // This will add a new repo to our list.
-        // It combines the repoName and lastUpdated strings together.
+    private void addToUserList(String firstName, String lastName, String createdAt, String lastUpdated, String email, String phone, String userId, String role) {
+        // This will add a new data to our list.
+        // It combines the data strings together in a "formated" matter
         // And then adds them followed by a new line (\n\n make two new lines).
-        String strRow = repoName + " / " + lastUpdated;
+        String strRow = firstName + " " + lastName + "\nID: " + userId + "\ntel: " + phone + "\nemail: " + email + "\nrole: " + role + "\n" + "created: " + createdAt + "\nupdated: " + lastUpdated;
         String currentText = tvDataList.getText().toString();
         this.tvDataList.setText(currentText + "\n\n" + strRow);
     }
 
-    private void setRepoListText(String str) {
-        // This is used for setting the text of our repo list box to a specific string.
-        // We will use this to write a "No repos found" message if the user doens't have any.
+    private void setDataListText(String str) {
+        // This is used for setting the text of our data list box to a specific string.
+        // We will use this to write a "No data found" message if the request links to nothing.
         this.tvDataList.setText(str);
     }
-    private void getRepoList(String username) {
-        // First, we insert the username into the repo url.
-        // The repo url is defined in GitHubs API docs (https://developer.github.com/v3/repos/).
-        this.url = this.baseUrl + username;
+    private void getDataList(String id) {
+        // First, we insert the id into the API url.
+        // The API url is defined in format address:port/api/users/id (without id lists all users)
+        this.url = this.baseUrl + id;
 
         // Next, we create a new JsonArrayRequest. This will use Volley to make a HTTP request
         // that expects a JSON Array Response.
@@ -73,12 +73,12 @@ public class MainActivity extends AppCompatActivity {
                 new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
-                        // Check the length of our response (to see if the user has any repos)
+                        // Check the length of our response (to see if there are any data)
                         if (response.length() > 0) {
-                            // The user does have repos, so let's loop through them all.
+                            // The address points to some data, so let's loop through them all.
                             for (int i = 0; i < response.length(); i++) {
                                 try {
-                                    // For each repo, add a new line to our repo list.
+                                    // For each data block, add a new line to our data list.
                                     JSONObject jsonObj = response.getJSONObject(i);
                                     String firstName = jsonObj.get("first_name").toString();
                                     String lastName = jsonObj.get("last_name").toString();
@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
                                     String phone = jsonObj.get("phone").toString();
                                     String userId = jsonObj.get("user_id").toString();
                                     String role = jsonObj.get("role").toString();
-                                    addToRepoList(firstName, lastUpdated);
+                                    addToUserList(firstName, lastName, createdAt, lastUpdated, email, phone, userId, role);
                                 } catch (JSONException e) {
                                     // If there is an error then output this to the logs.
                                     Log.e("Volley", "Invalid JSON Object.");
@@ -96,8 +96,8 @@ public class MainActivity extends AppCompatActivity {
 
                             }
                         } else {
-                            // The user didn't have any repos.
-                            setRepoListText("No users found.");
+                            // The address didnt point to any data.
+                            setDataListText("No data found.");
                         }
 
                     }
@@ -106,8 +106,8 @@ public class MainActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        // If there a HTTP error then add a note to our repo list.
-                        setRepoListText("Error while calling REST API");
+                        // If there a HTTP error then add a note to our data list.
+                        setDataListText("Error while calling REST API");
                         Log.e("Volley", error.toString());
                     }
                 }
@@ -117,10 +117,10 @@ public class MainActivity extends AppCompatActivity {
         requestQueue.add(arrReq);
     }
     public void getDataClicked(View v) {
-        // Clear the repo list (so we have a fresh screen to add to)
-        clearRepoList();
+        // Clear the data list (so we have a fresh screen to add to)
+        clearDataList();
         // Call our getdataList() function that is defined above and pass in the
         // text which has been entered into the getUser text input field.
-        getRepoList(getUser.getText().toString());
+        getDataList(getUser.getText().toString());
     }
 }
