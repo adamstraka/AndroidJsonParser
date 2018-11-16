@@ -22,29 +22,29 @@ import org.json.JSONException;
 
 public class MainActivity extends AppCompatActivity {
 
-    EditText etGitHubUser; // This will be a reference to our GitHub username input.
+    EditText getUser; // This will be a reference to our GitHub username input.
     Button btnGetUsers;  // This is a reference to the "Get Repos" button.
-    TextView tvRepoList;  // This will reference our repo list text box.
+    TextView tvDataList;  // This will reference our data list text box.
     RequestQueue requestQueue;  // This is our requests queue to process our HTTP requests.
 
-    String baseUrl = "http://192.168.88.201:8080/api/users/";  // This is the API base URL (GitHub API)
-    String url; // This will hold the full URL which will include the username entered in the etGitHubUser.
+    String baseUrl = "http://192.168.1.16:8080/api/users/";  // This is the local PZH API URL for users - because it runs now on localhost, ip address has to be changes on different locations
+    String url; // This will hold the full URL which will include the user ID entered in the getUser.
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);  // This is some magic for Android to load a previously saved state for when you are switching between actvities.
         setContentView(R.layout.activity_main);  // This links our code to our layout which we defined earlier.
 
-        this.etGitHubUser = (EditText) findViewById(R.id.et_github_user);  // Link our github user text box.
+        this.getUser = (EditText) findViewById(R.id.get_user);  // Link our github user text box.
         this.btnGetUsers = (Button) findViewById(R.id.btn_get_users);  // Link our clicky button.
-        this.tvRepoList = (TextView) findViewById(R.id.tv_repo_list);  // Link our repository list text output box.
-        this.tvRepoList.setMovementMethod(new ScrollingMovementMethod());  // This makes our text box scrollable, for those big GitHub contributors with lots of repos :)
+        this.tvDataList = (TextView) findViewById(R.id.tv_repo_list);  // Link our data list text output box.
+        this.tvDataList.setMovementMethod(new ScrollingMovementMethod());  // This makes our text box scrollable
 
         requestQueue = Volley.newRequestQueue(this);  // This setups up a new request queue which we will need to make HTTP requests.
     }
     private void clearRepoList() {
         // This will clear the repo list (set it as a blank string).
-        this.tvRepoList.setText("");
+        this.tvDataList.setText("");
     }
 
     private void addToRepoList(String repoName, String lastUpdated) {
@@ -52,14 +52,14 @@ public class MainActivity extends AppCompatActivity {
         // It combines the repoName and lastUpdated strings together.
         // And then adds them followed by a new line (\n\n make two new lines).
         String strRow = repoName + " / " + lastUpdated;
-        String currentText = tvRepoList.getText().toString();
-        this.tvRepoList.setText(currentText + "\n\n" + strRow);
+        String currentText = tvDataList.getText().toString();
+        this.tvDataList.setText(currentText + "\n\n" + strRow);
     }
 
     private void setRepoListText(String str) {
         // This is used for setting the text of our repo list box to a specific string.
         // We will use this to write a "No repos found" message if the user doens't have any.
-        this.tvRepoList.setText(str);
+        this.tvDataList.setText(str);
     }
     private void getRepoList(String username) {
         // First, we insert the username into the repo url.
@@ -80,9 +80,15 @@ public class MainActivity extends AppCompatActivity {
                                 try {
                                     // For each repo, add a new line to our repo list.
                                     JSONObject jsonObj = response.getJSONObject(i);
-                                    String repoName = jsonObj.get("first_name").toString();
+                                    String firstName = jsonObj.get("first_name").toString();
+                                    String lastName = jsonObj.get("last_name").toString();
+                                    String createdAt = jsonObj.get("createdAt").toString();
                                     String lastUpdated = jsonObj.get("updatedAt").toString();
-                                    addToRepoList(repoName, lastUpdated);
+                                    String email = jsonObj.get("email").toString();
+                                    String phone = jsonObj.get("phone").toString();
+                                    String userId = jsonObj.get("user_id").toString();
+                                    String role = jsonObj.get("role").toString();
+                                    addToRepoList(firstName, lastUpdated);
                                 } catch (JSONException e) {
                                     // If there is an error then output this to the logs.
                                     Log.e("Volley", "Invalid JSON Object.");
@@ -110,11 +116,11 @@ public class MainActivity extends AppCompatActivity {
         // The request queue will automatically handle the request as soon as it can.
         requestQueue.add(arrReq);
     }
-    public void getReposClicked(View v) {
+    public void getDataClicked(View v) {
         // Clear the repo list (so we have a fresh screen to add to)
         clearRepoList();
-        // Call our getRepoList() function that is defined above and pass in the
-        // text which has been entered into the etGitHubUser text input field.
-        getRepoList(etGitHubUser.getText().toString());
+        // Call our getdataList() function that is defined above and pass in the
+        // text which has been entered into the getUser text input field.
+        getRepoList(getUser.getText().toString());
     }
 }
